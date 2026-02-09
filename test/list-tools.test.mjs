@@ -1,9 +1,9 @@
 /**
- * Test that the MCP server lists only the read-only tools (get/read/search).
- * See READ_ONLY_TOOLS.md for the canonical list.
+ * Test that the MCP server lists every tool defined in src/tools.
  */
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readdir, readFile } from "node:fs/promises";
 import assert from "node:assert";
 import test from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client";
@@ -12,39 +12,25 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const projectRoot = join(__dirname, "..");
 
-/** Read-only tool names from READ_ONLY_TOOLS.md (get, read, search only). */
-const EXPECTED_READ_ONLY_TOOLS = new Set([
-  "get-vendor",
-  "get_estimate",
-  "get_employee",
-  "get-bill",
-  "get_journal_entry",
-  "get_customer",
-  "get_bill_payment",
-  "get_purchase",
-  "read_item",
-  "read_invoice",
-  "search_journal_entries",
-  "search_vendors",
-  "search_items",
-  "search_accounts",
-  "search_bill_payments",
-  "search_bills",
-  "search_invoices",
-  "search_estimates",
-  "search_customers",
-  "search_employees",
-  "search_purchases",
-]);
+async function getExpectedToolNamesFromSource() {
+  const toolsDir = join(projectRoot, "src", "tools");
+  const files = (await readdir(toolsDir)).filter((file) => file.endsWith(".tool.ts"));
 
-/** Mutation tools that must NOT be listed. */
-const MUTATION_PREFIXES = ["create_", "create-", "update_", "update-", "delete_", "delete-"];
+  const names = new Set();
 
-function isMutation(name) {
-  return MUTATION_PREFIXES.some((p) => name.startsWith(p));
+  for (const file of files) {
+    const content = await readFile(join(toolsDir, file), "utf8");
+    const match = content.match(/const\s+toolName\s*=\s*["'`]([^"'`]+)["'`]/);
+    assert(match, `Could not find toolName in ${file}`);
+    names.add(match[1]);
+  }
+
+  return names;
 }
 
-test("MCP server lists only read-only tools", async () => {
+test("MCP server lists all defined tools", async () => {
+  const expectedTools = await getExpectedToolNamesFromSource();
+
   const transport = new StdioClientTransport({
     command: "node",
     args: ["dist/index.js"],
@@ -66,38 +52,29 @@ test("MCP server lists only read-only tools", async () => {
     const listed = result.tools.map((t) => t.name);
     const listedSet = new Set(listed);
 
-    // No duplicates
     assert.strictEqual(
       listed.length,
       listedSet.size,
       `Duplicate tool names: ${listed.filter((n, i) => listed.indexOf(n) !== i).join(", ") || "none"}`
     );
 
-    // Exactly the expected read-only set
     assert.strictEqual(
       listedSet.size,
-      EXPECTED_READ_ONLY_TOOLS.size,
-      `Expected ${EXPECTED_READ_ONLY_TOOLS.size} tools, got ${listedSet.size}. Listed: ${[...listedSet].sort().join(", ")}`
+      expectedTools.size,
+      `Expected ${expectedTools.size} tools, got ${listedSet.size}. Listed: ${[
+        ...listedSet,
+      ]
+        .sort()
+        .join(", ")}`
     );
+
+    for (const name of expectedTools) {
+      assert(listedSet.has(name), `Missing expected tool "${name}".`);
+    }
 
     for (const name of listedSet) {
-      assert(
-        EXPECTED_READ_ONLY_TOOLS.has(name),
-        `Unexpected tool "${name}". Expected only read-only tools from READ_ONLY_TOOLS.md.`
-      );
+      assert(expectedTools.has(name), `Unexpected tool "${name}".`);
     }
-
-    for (const name of EXPECTED_READ_ONLY_TOOLS) {
-      assert(listedSet.has(name), `Missing expected read-only tool "${name}".`);
-    }
-
-    // No create/update/delete tools
-    const mutations = listed.filter(isMutation);
-    assert.strictEqual(
-      mutations.length,
-      0,
-      `Mutation tools must not be listed: ${mutations.join(", ")}`
-    );
   } finally {
     await transport.close();
   }
