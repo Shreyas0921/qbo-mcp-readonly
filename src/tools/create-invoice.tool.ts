@@ -1,4 +1,5 @@
 import { createQuickbooksInvoice } from "../handlers/create-quickbooks-invoice.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -22,8 +23,8 @@ const toolSchema = z.object({
 const toolHandler = async ({ params }: any) => {
   const response = await createQuickbooksInvoice(params);
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error creating invoice: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   return {
     content: [
       { type: "text" as const, text: `Invoice created successfully:` },

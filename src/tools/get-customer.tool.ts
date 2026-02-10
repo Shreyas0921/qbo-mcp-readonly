@@ -1,4 +1,5 @@
 import { getQuickbooksCustomer } from "../handlers/get-quickbooks-customer.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -13,12 +14,8 @@ const toolHandler = async (args: { [key: string]: ToolParams }) => {
   const response = await getQuickbooksCustomer(params.id);
 
   if (response.isError) {
-    return {
-      content: [
-        { type: "text" as const, text: `Error getting customer: ${response.error}` },
-      ],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
 
   return {
     content: [

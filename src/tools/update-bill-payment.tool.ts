@@ -1,4 +1,5 @@
 import { updateQuickbooksBillPayment } from "../handlers/update-quickbooks-bill-payment.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -18,12 +19,8 @@ const toolHandler = async (args: any) => {
   const response = await updateQuickbooksBillPayment(args.params.billPayment);
 
   if (response.isError) {
-    return {
-      content: [
-        { type: "text" as const, text: `Error updating bill payment: ${response.error}` },
-      ],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
 
   return {
     content: [

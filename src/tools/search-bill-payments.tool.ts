@@ -1,4 +1,5 @@
 import { searchQuickbooksBillPayments } from "../handlers/search-quickbooks-bill-payments.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -24,12 +25,8 @@ const toolHandler = async (args: any) => {
   const response = await searchQuickbooksBillPayments(args.params);
 
   if (response.isError) {
-    return {
-      content: [
-        { type: "text" as const, text: `Error searching bill payments: ${response.error}` },
-      ],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
 
   return {
     content: [

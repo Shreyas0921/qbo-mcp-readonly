@@ -85,3 +85,33 @@ If you see an error message like "QuickBooks not connected", make sure to:
 1. Check that your `.env` file contains all required variables
 2. Verify that your tokens are valid and not expired
 
+For MCP tool callers (including AI agents), tool failures are now normalized to a structured envelope.
+
+`structuredContent` on failed tool calls has this shape:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "QBO_VALIDATION_FAULT",
+    "message": "create-bill: Unsupported Operation",
+    "detail": "Operation org.xml.sax.SAXParseException; Premature end of file. is not supported.",
+    "retryable": false,
+    "provider": "quickbooks",
+    "http_status": 500,
+    "raw": {}
+  }
+}
+```
+
+MCP error semantics:
+
+1. Failed tool calls return `isError: true`.
+2. A human-readable message is present in `content`.
+3. A machine-readable envelope is present in `structuredContent`.
+
+Recommended agent behavior:
+
+1. First read `isError`.
+2. If `true`, parse `structuredContent.error`.
+3. Use `error.retryable` to decide retry vs request-shape fix.

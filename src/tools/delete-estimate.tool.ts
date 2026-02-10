@@ -1,4 +1,5 @@
 import { deleteQuickbooksEstimate } from "../handlers/delete-quickbooks-estimate.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -9,8 +10,8 @@ const toolSchema = z.object({ idOrEntity: z.any() });
 const toolHandler = async (args: any) => {
   const response = await deleteQuickbooksEstimate(args.params.idOrEntity);
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error deleting estimate: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   return {
     content: [
       { type: "text" as const, text: `Estimate deleted:` },

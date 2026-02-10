@@ -1,4 +1,5 @@
 import { searchQuickbooksAccounts } from "../handlers/search-quickbooks-accounts.handler.js";
+import { buildToolErrorResult, buildToolInputErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -173,13 +174,13 @@ const toolHandler = async ({ params }: any) => {
   const { criteria } = params;
   const parsed = RUNTIME_CRITERIA_SCHEMA.safeParse(criteria);
   if (!parsed.success) {
-    return { content: [{ type: "text" as const, text: `Invalid criteria: ${parsed.error.message}` }] };
+    return buildToolInputErrorResult(toolName, parsed.error.message, criteria);
   }
   const normalized = normalizeAccountCriteria(criteria);
   const response = await searchQuickbooksAccounts(normalized);
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error searching accounts: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   const accounts = response.result;
   return {
     content: [

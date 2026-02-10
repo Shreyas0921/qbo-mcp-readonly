@@ -1,4 +1,5 @@
 import { searchQuickbooksBills } from "../handlers/search-quickbooks-bills.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -86,10 +87,8 @@ export const SearchBillsTool: ToolDefinition<typeof toolSchema> = {
 
     const response = await searchQuickbooksBills(criteriaToSend);
     if (response.isError) {
-      return {
-        content: [{ type: "text" as const, text: `Error searching bills: ${response.error}` }],
-      };
-    }
+  return buildToolErrorResult(toolName, response.error);
+}
     return {
       content: [
         { type: "text" as const, text: Array.isArray(response.result) ? `Found ${response.result.length} bills:` : `Count: ${response.result}` },

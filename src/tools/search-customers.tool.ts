@@ -1,4 +1,5 @@
 import { searchQuickbooksCustomers } from "../handlers/search-quickbooks-customers.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -76,10 +77,8 @@ const toolHandler = async (args: any) => {
 
   const response = await searchQuickbooksCustomers(criteriaToSend);
   if (response.isError) {
-    return {
-      content: [{ type: "text" as const, text: `Error searching customers: ${response.error}` }],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   return {
     content: [
       { type: "text" as const, text: Array.isArray(response.result) ? `Found ${response.result.length} customers:` : `Count: ${response.result}` },

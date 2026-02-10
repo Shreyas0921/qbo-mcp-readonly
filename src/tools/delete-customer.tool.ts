@@ -1,4 +1,5 @@
 import { deleteQuickbooksCustomer } from "../handlers/delete-quickbooks-customer.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -10,8 +11,8 @@ const toolHandler = async (args: any) => {
   const response = await deleteQuickbooksCustomer(args.params.idOrEntity);
 
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error deleting customer: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
 
   return {
     content: [

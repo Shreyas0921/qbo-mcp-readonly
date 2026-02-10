@@ -1,4 +1,5 @@
 import { searchQuickbooksEstimates } from "../handlers/search-quickbooks-estimates.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -79,10 +80,8 @@ export const SearchEstimatesTool: ToolDefinition<typeof toolSchema> = {
 
     const response = await searchQuickbooksEstimates(criteriaToSend);
     if (response.isError) {
-      return {
-        content: [{ type: "text" as const, text: `Error searching estimates: ${response.error}` }],
-      };
-    }
+  return buildToolErrorResult(toolName, response.error);
+}
     return {
       content: [
         { type: "text" as const, text: Array.isArray(response.result) ? `Found ${response.result.length} estimates:` : `Count: ${response.result}` },

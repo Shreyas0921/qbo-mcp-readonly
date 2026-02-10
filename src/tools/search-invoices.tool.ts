@@ -1,4 +1,5 @@
 import { searchQuickbooksInvoices } from "../handlers/search-quickbooks-invoices.handler.js";
+import { buildToolErrorResult, buildToolInputErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -105,22 +106,14 @@ const toolHandler = async ({ params }: any) => {
   // Validate runtime schema
   const parsed = RUNTIME_CRITERIA_SCHEMA.safeParse(criteria);
   if (!parsed.success) {
-    return {
-      content: [
-        { type: "text" as const, text: `Invalid criteria: ${parsed.error.message}` },
-      ],
-    };
+    return buildToolInputErrorResult(toolName, parsed.error.message, criteria);
   }
 
   const response = await searchQuickbooksInvoices(criteria);
 
   if (response.isError) {
-    return {
-      content: [
-        { type: "text" as const, text: `Error searching invoices: ${response.error}` },
-      ],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   const invoices = response.result;
   return {
     content: [

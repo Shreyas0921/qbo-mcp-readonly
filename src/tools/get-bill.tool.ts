@@ -1,4 +1,5 @@
 import { getQuickbooksBill } from "../handlers/get-quickbooks-bill.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -12,15 +13,8 @@ const toolHandler = async (args: { [x: string]: any }) => {
   const response = await getQuickbooksBill(args.id);
 
   if (response.isError) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Error getting bill: ${response.error}`,
-        },
-      ],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
 
   const bill = response.result;
 

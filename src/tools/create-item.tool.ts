@@ -1,4 +1,5 @@
 import { createQuickbooksItem } from "../handlers/create-quickbooks-item.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -17,8 +18,8 @@ const toolSchema = z.object({
 const toolHandler = async ({ params }: any) => {
   const response = await createQuickbooksItem(params);
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error creating item: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   return {
     content: [
       { type: "text" as const, text: `Item created successfully:` },

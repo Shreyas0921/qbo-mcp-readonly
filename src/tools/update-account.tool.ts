@@ -1,4 +1,5 @@
 import { updateQuickbooksAccount } from "../handlers/update-quickbooks-account.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -13,8 +14,8 @@ const toolSchema = z.object({
 const toolHandler = async ({ params }: any) => {
   const response = await updateQuickbooksAccount(params);
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error updating account: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   return {
     content: [
       { type: "text" as const, text: `Account updated successfully:` },

@@ -1,4 +1,5 @@
 import { deleteQuickbooksVendor } from "../handlers/delete-quickbooks-vendor.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -15,15 +16,8 @@ const toolHandler = async (args: { [x: string]: any }) => {
   const response = await deleteQuickbooksVendor(args.vendor);
 
   if (response.isError) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Error deleting vendor: ${response.error}`,
-        },
-      ],
-    };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
 
   const vendor = response.result;
 

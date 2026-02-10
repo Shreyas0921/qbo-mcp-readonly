@@ -1,4 +1,5 @@
 import { searchQuickbooksVendors } from "../handlers/search-quickbooks-vendors.handler.js";
+import { buildToolErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -93,10 +94,8 @@ export const SearchVendorsTool: ToolDefinition<typeof toolSchema> = {
 
     const response = await searchQuickbooksVendors(criteriaToSend);
     if (response.isError) {
-      return {
-        content: [{ type: "text" as const, text: `Error searching vendors: ${response.error}` }],
-      };
-    }
+  return buildToolErrorResult(toolName, response.error);
+}
     return {
       content: [
         { type: "text" as const, text: Array.isArray(response.result) ? `Found ${response.result.length} vendors:` : `Count: ${response.result}` },

@@ -1,4 +1,5 @@
 import { searchQuickbooksItems } from "../handlers/search-quickbooks-items.handler.js";
+import { buildToolErrorResult, buildToolInputErrorResult } from "../helpers/build-tool-error-result.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
 
@@ -95,18 +96,14 @@ const toolHandler = async ({ params }: any) => {
   // Validate against runtime schema
   const parsed = RUNTIME_CRITERIA_SCHEMA.safeParse(criteria);
   if (!parsed.success) {
-    return {
-      content: [
-        { type: "text" as const, text: `Invalid criteria: ${parsed.error.message}` },
-      ],
-    };
+    return buildToolInputErrorResult(toolName, parsed.error.message, criteria);
   }
 
   const response = await searchQuickbooksItems(criteria);
 
   if (response.isError) {
-    return { content: [{ type: "text" as const, text: `Error searching items: ${response.error}` }] };
-  }
+  return buildToolErrorResult(toolName, response.error);
+}
   const items = response.result;
   return {
     content: [
