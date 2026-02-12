@@ -1,9 +1,8 @@
 /**
- * Test that the MCP server lists every tool defined in src/tools.
+ * Test that the MCP server only exposes the read-only tool set.
  */
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readdir, readFile } from "node:fs/promises";
 import assert from "node:assert";
 import test from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client";
@@ -12,25 +11,31 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const projectRoot = join(__dirname, "..");
 
-async function getExpectedToolNamesFromSource() {
-  const toolsDir = join(projectRoot, "src", "tools");
-  const files = (await readdir(toolsDir)).filter((file) => file.endsWith(".tool.ts"));
+const expectedReadOnlyTools = new Set([
+  "search_accounts",
+  "get_bill_payment",
+  "search_bill_payments",
+  "get-bill",
+  "search_bills",
+  "get_customer",
+  "search_customers",
+  "get_employee",
+  "search_employees",
+  "get_estimate",
+  "search_estimates",
+  "read_invoice",
+  "search_invoices",
+  "read_item",
+  "search_items",
+  "get_journal_entry",
+  "search_journal_entries",
+  "get_purchase",
+  "search_purchases",
+  "get-vendor",
+  "search_vendors",
+]);
 
-  const names = new Set();
-
-  for (const file of files) {
-    const content = await readFile(join(toolsDir, file), "utf8");
-    const match = content.match(/const\s+toolName\s*=\s*["'`]([^"'`]+)["'`]/);
-    assert(match, `Could not find toolName in ${file}`);
-    names.add(match[1]);
-  }
-
-  return names;
-}
-
-test("MCP server lists all defined tools", async () => {
-  const expectedTools = await getExpectedToolNamesFromSource();
-
+test("MCP server lists only read-only tools", async () => {
   const transport = new StdioClientTransport({
     command: "node",
     args: ["dist/index.js"],
@@ -60,20 +65,20 @@ test("MCP server lists all defined tools", async () => {
 
     assert.strictEqual(
       listedSet.size,
-      expectedTools.size,
-      `Expected ${expectedTools.size} tools, got ${listedSet.size}. Listed: ${[
+      expectedReadOnlyTools.size,
+      `Expected ${expectedReadOnlyTools.size} tools, got ${listedSet.size}. Listed: ${[
         ...listedSet,
       ]
         .sort()
         .join(", ")}`
     );
 
-    for (const name of expectedTools) {
+    for (const name of expectedReadOnlyTools) {
       assert(listedSet.has(name), `Missing expected tool "${name}".`);
     }
 
     for (const name of listedSet) {
-      assert(expectedTools.has(name), `Unexpected tool "${name}".`);
+      assert(expectedReadOnlyTools.has(name), `Unexpected tool "${name}".`);
     }
   } finally {
     await transport.close();

@@ -62,20 +62,13 @@ This writes `tools-list.json` with each tool's name, description, and JSON-schem
 
 ## Available Tools
 
-Added tools for Create, Delete, Get, Search, Update for the following entities:
+This server is currently configured in read-only mode.
 
+For the exact registered tool list, see `READ_ONLY_TOOLS.md` or run:
 
-- Account
-- Bill Payment
-- Bill
-- Customer
-- Employee
-- Estimate
-- Invoice
-- Item
-- Journal Entry
-- Purchase
-- Vendor
+```bash
+npm run export-tools
+```
 
 
 ## Error Handling
